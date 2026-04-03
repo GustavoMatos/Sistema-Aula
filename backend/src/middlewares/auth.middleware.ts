@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { supabase } from '../config/supabase.js'
+import { config } from '../config/index.js'
 import { UnauthorizedError } from '../utils/errors.js'
 
 // Extend Express Request to include user
@@ -16,6 +17,15 @@ declare global {
   }
 }
 
+// Dev user for development mode (when no auth token provided)
+// Using valid UUIDs for database compatibility
+const DEV_USER = {
+  id: '00000000-0000-0000-0000-000000000001',
+  email: 'dev@localhost',
+  workspace_id: '00000000-0000-0000-0000-000000000000',
+  role: 'admin',
+}
+
 export async function authMiddleware(
   req: Request,
   _res: Response,
@@ -23,6 +33,12 @@ export async function authMiddleware(
 ) {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '')
+
+    // In development mode, allow requests without token using dev user
+    if (!token && config.env === 'development') {
+      req.user = DEV_USER
+      return next()
+    }
 
     if (!token) {
       throw new UnauthorizedError('No token provided')

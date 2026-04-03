@@ -53,21 +53,51 @@ npm run dev
 
 ### Variáveis de Ambiente
 
-**Frontend (.env.local):**
-```
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
+#### Frontend (`frontend/.env.local`)
+
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `VITE_SUPABASE_URL` | ✅ | URL do projeto Supabase (ex: `https://xxx.supabase.co`) |
+| `VITE_SUPABASE_ANON_KEY` | ✅ | Chave anônima do Supabase (encontrada em Settings > API) |
+| `VITE_API_URL` | ✅ | URL da API backend (padrão: `http://localhost:3001`) |
+
+```bash
+# Exemplo
+VITE_SUPABASE_URL=https://jqduuiuqxfarhsvnrgvl.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 VITE_API_URL=http://localhost:3001
 ```
 
-**Backend (.env):**
-```
+#### Backend (`backend/.env`)
+
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `NODE_ENV` | ❌ | Ambiente (`development`, `production`, `test`). Padrão: `development` |
+| `PORT` | ❌ | Porta do servidor. Padrão: `3001` |
+| `SUPABASE_URL` | ✅ (prod) | URL do projeto Supabase |
+| `SUPABASE_ANON_KEY` | ❌ | Chave anônima do Supabase |
+| `SUPABASE_SERVICE_KEY` | ✅ (prod) | Chave de serviço do Supabase (Settings > API > service_role) |
+| `EVOLUTION_API_URL` | ❌ | URL da Evolution API (ex: `https://evolution.seudominio.com`) |
+| `EVOLUTION_API_KEY` | ❌ | Chave de API da Evolution |
+| `FRONTEND_URL` | ❌ | URL do frontend para CORS. Padrão: `http://localhost:5173` |
+| `WEBHOOK_BASE_URL` | ❌ | URL base para webhooks em produção |
+
+```bash
+# Exemplo
+NODE_ENV=development
 PORT=3001
-SUPABASE_URL=your-supabase-url
-SUPABASE_SERVICE_KEY=your-service-key
-EVOLUTION_API_URL=your-evolution-api-url
-EVOLUTION_API_KEY=your-api-key
+SUPABASE_URL=https://jqduuiuqxfarhsvnrgvl.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+EVOLUTION_API_URL=https://evolution.example.com
+EVOLUTION_API_KEY=your-evolution-api-key
+FRONTEND_URL=http://localhost:5173
 ```
+
+#### Onde obter as chaves
+
+1. **Supabase**: Acesse [supabase.com](https://supabase.com) > Seu projeto > Settings > API
+2. **Evolution API**: Configure sua instância da Evolution API e obtenha a API key no painel
 
 ## Scripts
 
