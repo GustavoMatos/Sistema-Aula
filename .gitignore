@@ -28,6 +28,23 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 *.swp
+
+# AI Tools & Frameworks
+.aiox-core/
+.antigravity/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.mcp.json
+
+# Project specific
+Referencias/
+designSystem.html
+designSystem.md
+preview-sistema.html
+qrcode-whatsapp.png
+backend-deploy.tar.gz
 *.swo
 
 # Testing
