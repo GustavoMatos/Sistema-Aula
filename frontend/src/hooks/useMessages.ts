@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { messagesApi } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 import type { SendMessageDTO } from '@/lib/api'
 
 // Query keys
@@ -10,15 +12,46 @@ export const messagesKeys = {
   message: (id: string) => [...messagesKeys.all, id] as const,
 }
 
-// Get messages for a lead
+// Get messages for a lead with realtime updates
 export function useLeadMessages(
   leadId: string,
   options?: { limit?: number; offset?: number }
 ) {
+  const queryClient = useQueryClient()
+
+  // Subscribe to realtime changes
+  useEffect(() => {
+    if (!leadId) return
+
+    const channel = supabase
+      .channel(`messages:${leadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `lead_id=eq.${leadId}`,
+        },
+        () => {
+          // Invalidate query to refetch messages
+          queryClient.invalidateQueries({
+            queryKey: messagesKeys.lead(leadId),
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [leadId, queryClient])
+
   return useQuery({
     queryKey: messagesKeys.lead(leadId),
     queryFn: () => messagesApi.getByLead(leadId, options),
     enabled: !!leadId,
+    refetchInterval: 5000, // Polling every 5 seconds as fallback
   })
 }
 

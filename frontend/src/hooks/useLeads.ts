@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { leadsApi } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 import type { LeadFilters, CreateLeadDTO, UpdateLeadDTO } from '@/lib/api'
 
 // Query keys
@@ -11,12 +13,44 @@ export const leadsKeys = {
   history: (id: string) => [...leadsKeys.all, 'history', id] as const,
 }
 
-// List leads with filters
+// List leads with filters and realtime updates
 export function useLeads(filters: LeadFilters = {}) {
+  const queryClient = useQueryClient()
+
+  // Subscribe to realtime changes on leads table
+  useEffect(() => {
+    const channel = supabase
+      .channel('leads:all')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leads',
+        },
+        (payload) => {
+          // Invalidate all lead queries to refresh data
+          queryClient.invalidateQueries({ queryKey: leadsKeys.all })
+
+          // Show toast for new leads
+          if (payload.eventType === 'INSERT') {
+            const newLead = payload.new as { name?: string }
+            toast.info(`Novo lead: ${newLead.name || 'Sem nome'}`)
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
+
   return useQuery({
     queryKey: leadsKeys.list(filters),
     queryFn: () => leadsApi.list(filters),
     placeholderData: (previousData) => previousData,
+    refetchInterval: 5000, // Polling every 5 seconds
   })
 }
 

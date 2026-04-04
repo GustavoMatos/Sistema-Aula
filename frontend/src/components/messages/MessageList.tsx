@@ -56,8 +56,15 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
     )
   }
 
+  // Sort messages by time (oldest first)
+  const sortedMessages = [...messages].sort((a, b) => {
+    const dateA = new Date(a.sent_at || a.created_at).getTime()
+    const dateB = new Date(b.sent_at || b.created_at).getTime()
+    return dateA - dateB
+  })
+
   // Group messages by date
-  const groupedMessages = messages.reduce(
+  const groupedMessages = sortedMessages.reduce(
     (groups, message) => {
       const date = new Date(message.sent_at || message.created_at)
       const dateKey = format(date, 'yyyy-MM-dd')
