@@ -34,8 +34,9 @@ export async function authMiddleware(
   try {
     const token = req.headers.authorization?.replace('Bearer ', '')
 
-    // In development mode, allow requests without token using dev user
-    if (!token && config.env === 'development') {
+    // TEMPORARY: Allow requests without token in any environment
+    // TODO: Remove this after implementing login page
+    if (!token) {
       req.user = DEV_USER
       return next()
     }

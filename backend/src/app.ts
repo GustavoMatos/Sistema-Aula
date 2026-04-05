@@ -8,10 +8,28 @@ import routes from './routes/index.js'
 
 const app = express()
 
+// Trust proxy for Easypanel/Docker deployments
+app.set('trust proxy', 1)
+
 // Security middlewares
 app.use(helmet())
+
+// CORS - allow multiple origins for development and production
+const allowedOrigins = [
+  config.frontendUrl,
+  'https://gangus.netlify.app',
+  'http://localhost:5173',
+].filter(Boolean)
+
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+    callback(null, false)
+  },
   credentials: true,
 }))
 
