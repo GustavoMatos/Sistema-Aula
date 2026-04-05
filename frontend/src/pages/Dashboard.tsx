@@ -1,5 +1,6 @@
 import { useDashboardStats, useRecentActivity } from '@/hooks/useDashboard'
 import { Users, MessageSquare, TrendingUp, Clock, Loader2 } from 'lucide-react'
+import type { ActivityItem } from '@/lib/api/dashboard'
 
 export function Dashboard() {
   const { data: stats, isLoading } = useDashboardStats()
@@ -58,9 +59,9 @@ export function Dashboard() {
             <p className="text-sm text-muted-foreground">Follow-ups Pendentes</p>
           </div>
           <p className="text-3xl font-bold mt-2">{stats?.pendingFollowups || 0}</p>
-          {(stats?.overdueFollowups || 0) > 0 && (
+          {(stats?.overdueFollowups ?? 0) > 0 && (
             <p className="text-sm text-red-500 mt-1">
-              {stats.overdueFollowups} atrasados
+              {stats?.overdueFollowups} atrasados
             </p>
           )}
         </div>
@@ -115,17 +116,17 @@ export function Dashboard() {
       )}
 
       {/* Recent Activity */}
-      {activity && activity.length > 0 && (
+      {activity?.activity && activity.activity.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Atividade Recente</h2>
           <div className="bg-card rounded-lg border divide-y">
-            {activity.map((item, index) => (
+            {activity.activity.map((item: ActivityItem, index: number) => (
               <div key={index} className="flex items-center gap-4 p-4">
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
                 <div className="flex-1">
                   <p className="text-sm">{item.description}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(item.created_at).toLocaleString('pt-BR')}
+                    {new Date(item.timestamp).toLocaleString('pt-BR')}
                   </p>
                 </div>
               </div>
