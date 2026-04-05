@@ -1,5 +1,5 @@
-import { supabase } from '../config/supabase'
-import type { CreateStageDTO, UpdateStageDTO, ReorderStagesDTO } from '../validators/kanban.validator'
+import { supabase } from '../config/supabase.js'
+import type { CreateStageDTO, UpdateStageDTO, ReorderStagesDTO } from '../validators/kanban.validator.js'
 
 export interface KanbanStage {
   id: string

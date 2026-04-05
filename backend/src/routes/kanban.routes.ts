@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authMiddleware } from '../middlewares/auth.middleware'
+import { authMiddleware } from '../middlewares/auth.middleware.js'
 import {
   listStages,
   getBoard,
@@ -8,7 +8,7 @@ import {
   deleteStage,
   reorderStages,
   getStage,
-} from '../controllers/kanban.controller'
+} from '../controllers/kanban.controller.js'
 
 const router = Router()
 

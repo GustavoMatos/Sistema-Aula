@@ -1,5 +1,5 @@
-import { supabase } from '../config/supabase'
-import type { CreateFollowupDTO, UpdateFollowupDTO, ListFollowupsQuery } from '../validators/followups.validator'
+import { supabase } from '../config/supabase.js'
+import type { CreateFollowupDTO, UpdateFollowupDTO, ListFollowupsQuery } from '../validators/followups.validator.js'
 
 export interface Followup {
   id: string

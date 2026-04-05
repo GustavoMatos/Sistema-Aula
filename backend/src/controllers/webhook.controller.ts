@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { webhookService, EvolutionWebhookEvent, MessageData } from '../services/webhook.service'
+import { webhookService, EvolutionWebhookEvent, MessageData } from '../services/webhook.service.js'
 
 class WebhookController {
   // Main webhook handler for Evolution API v2

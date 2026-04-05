@@ -1,10 +1,10 @@
 import type { Request, Response, NextFunction } from 'express'
-import { followupsService } from '../services/followups.service'
+import { followupsService } from '../services/followups.service.js'
 import {
   createFollowupSchema,
   updateFollowupSchema,
   listFollowupsSchema,
-} from '../validators/followups.validator'
+} from '../validators/followups.validator.js'
 
 // List followups
 export async function listFollowups(req: Request, res: Response, next: NextFunction) {

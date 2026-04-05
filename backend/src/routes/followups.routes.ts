@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authMiddleware } from '../middlewares/auth.middleware'
+import { authMiddleware } from '../middlewares/auth.middleware.js'
 import {
   listFollowups,
   getFollowup,
@@ -10,7 +10,7 @@ import {
   getTodayFollowups,
   getOverdueFollowups,
   getFollowupsCounts,
-} from '../controllers/followups.controller'
+} from '../controllers/followups.controller.js'
 
 const router = Router()
 

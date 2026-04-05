@@ -1,10 +1,10 @@
 import type { Request, Response, NextFunction } from 'express'
-import { kanbanService } from '../services/kanban.service'
+import { kanbanService } from '../services/kanban.service.js'
 import {
   createStageSchema,
   updateStageSchema,
   reorderStagesSchema,
-} from '../validators/kanban.validator'
+} from '../validators/kanban.validator.js'
 
 // List all stages
 export async function listStages(req: Request, res: Response, next: NextFunction) {
