@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { supabase } from '../config/supabase.js'
 import { UnauthorizedError } from '../utils/errors.js'
+import { logger } from '../utils/logger.js'
 
 // Extend Express Request to include user
 declare global {
@@ -16,15 +17,6 @@ declare global {
   }
 }
 
-// Dev user for development mode (when no auth token provided)
-// Using valid UUIDs for database compatibility
-const DEV_USER = {
-  id: '00000000-0000-0000-0000-000000000001',
-  email: 'dev@localhost',
-  workspace_id: '00000000-0000-0000-0000-000000000000',
-  role: 'admin',
-}
-
 export async function authMiddleware(
   req: Request,
   _res: Response,
@@ -32,13 +24,6 @@ export async function authMiddleware(
 ) {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '')
-
-    // TEMPORARY: Allow requests without token in any environment
-    // TODO: Remove this after implementing login page
-    if (!token) {
-      req.user = DEV_USER
-      return next()
-    }
 
     if (!token) {
       throw new UnauthorizedError('No token provided')
@@ -51,14 +36,47 @@ export async function authMiddleware(
     }
 
     // Get user with workspace
-    const { data: userData, error: userError } = await supabase
+    let { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, email, workspace_id, role')
       .eq('id', user.id)
       .single()
 
+    // If user doesn't exist in users table, create workspace and user
     if (userError || !userData) {
-      throw new UnauthorizedError('User not found')
+      logger.info('Creating workspace and user for new auth user', { userId: user.id, email: user.email })
+
+      // Create workspace
+      const { data: workspace, error: wsError } = await supabase
+        .from('workspaces')
+        .insert({ name: user.email?.split('@')[0] || 'Meu Workspace' })
+        .select()
+        .single()
+
+      if (wsError || !workspace) {
+        logger.error('Failed to create workspace', { error: wsError })
+        throw new UnauthorizedError('Failed to setup user workspace')
+      }
+
+      // Create user record
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email,
+          workspace_id: workspace.id,
+          role: 'admin'
+        })
+        .select('id, email, workspace_id, role')
+        .single()
+
+      if (createError || !newUser) {
+        logger.error('Failed to create user record', { error: createError })
+        throw new UnauthorizedError('Failed to setup user')
+      }
+
+      userData = newUser
+      logger.info('User and workspace created successfully', { userId: user.id, workspaceId: workspace.id })
     }
 
     req.user = userData
