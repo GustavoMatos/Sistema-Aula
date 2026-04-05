@@ -20,9 +20,6 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
-
 # Copy package files
 COPY package*.json ./
 
@@ -34,10 +31,6 @@ COPY --from=builder /app/dist ./dist
 
 # Expose port
 EXPOSE 3001
-
-# Health check (increased start-period for Node.js startup time)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1
 
 # Start server
 CMD ["node", "dist/index.js"]
