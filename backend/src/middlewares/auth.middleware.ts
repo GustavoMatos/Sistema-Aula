@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { supabase } from '../config/supabase.js'
-import { config } from '../config/index.js'
 import { UnauthorizedError } from '../utils/errors.js'
 
 // Extend Express Request to include user
