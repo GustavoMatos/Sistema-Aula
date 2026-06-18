@@ -67,7 +67,7 @@ class ImportService {
     const { data: firstStage, error: stageError } = await supabase
       .from('kanban_stages')
       .select('id')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .order('position', { ascending: true })
       .limit(1)
       .single()
@@ -84,7 +84,7 @@ class ImportService {
     const { data: existing } = await supabase
       .from('leads')
       .select('phone')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .in('phone', phones)
 
     const existingPhones = new Set(existing?.map((e) => e.phone) || [])
@@ -97,7 +97,7 @@ class ImportService {
     }
 
     const toInsert: Array<{
-      workspace_id: string
+      tenant_id: string
       stage_id: string
       name: string
       phone: string
@@ -154,7 +154,7 @@ class ImportService {
         : null
 
       toInsert.push({
-        workspace_id: workspaceId,
+        tenant_id: workspaceId,
         stage_id: firstStage.id,
         name: row.name.trim(),
         phone,

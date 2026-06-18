@@ -1,7 +1,7 @@
 // Lead types
 export interface Lead {
   id: string
-  workspace_id: string
+  tenant_id: string
   stage_id: string
   name: string
   phone: string
@@ -20,7 +20,7 @@ export interface Lead {
 // Kanban types
 export interface KanbanStage {
   id: string
-  workspace_id: string
+  tenant_id: string
   name: string
   color: string
   position: number
@@ -31,7 +31,7 @@ export interface KanbanStage {
 // WhatsApp types
 export interface WhatsAppInstance {
   id: string
-  workspace_id: string
+  tenant_id: string
   name: string
   status: 'connected' | 'disconnected' | 'connecting' | 'awaiting_scan'
   phone_number?: string
@@ -59,7 +59,7 @@ export interface Message {
 // Follow-up types
 export interface FollowupConfig {
   id: string
-  workspace_id: string
+  tenant_id: string
   stage_id: string
   name: string
   delay_minutes: number
@@ -83,7 +83,7 @@ export interface Workspace {
 export interface User {
   id: string
   email: string
-  workspace_id: string
+  tenant_id: string
   role: 'admin' | 'user'
   created_at: string
 }

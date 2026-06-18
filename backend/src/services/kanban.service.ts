@@ -3,7 +3,7 @@ import type { CreateStageDTO, UpdateStageDTO, ReorderStagesDTO } from '../valida
 
 export interface KanbanStage {
   id: string
-  workspace_id: string
+  tenant_id: string
   name: string
   color: string
   position: number
@@ -31,7 +31,7 @@ class KanbanService {
     const { data, error } = await supabase
       .from('kanban_stages')
       .select('*')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .order('position', { ascending: true })
 
     if (error) throw new Error(error.message)
@@ -44,7 +44,7 @@ class KanbanService {
     const { data: stages, error: stagesError } = await supabase
       .from('kanban_stages')
       .select('*')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .order('position', { ascending: true })
 
     if (stagesError) throw new Error(stagesError.message)
@@ -53,7 +53,7 @@ class KanbanService {
     const { data: leads, error: leadsError } = await supabase
       .from('leads')
       .select('id, name, phone, company, potential_value, last_contact_at, created_at, stage_id')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .order('created_at', { ascending: false })
 
     if (leadsError) throw new Error(leadsError.message)
@@ -87,7 +87,7 @@ class KanbanService {
       const { data: maxStage } = await supabase
         .from('kanban_stages')
         .select('position')
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .order('position', { ascending: false })
         .limit(1)
         .single()
@@ -98,7 +98,7 @@ class KanbanService {
     const { data: stage, error } = await supabase
       .from('kanban_stages')
       .insert({
-        workspace_id: workspaceId,
+        tenant_id: workspaceId,
         name: data.name,
         color: data.color,
         position: orderIndex,
@@ -120,7 +120,7 @@ class KanbanService {
         updated_at: new Date().toISOString(),
       })
       .eq('id', stageId)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .select()
       .single()
 
@@ -136,7 +136,7 @@ class KanbanService {
       .from('leads')
       .select('id', { count: 'exact', head: true })
       .eq('stage_id', stageId)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
 
     if (count && count > 0) {
       throw new Error('Não é possível excluir um estágio que contém leads. Mova os leads primeiro.')
@@ -146,7 +146,7 @@ class KanbanService {
       .from('kanban_stages')
       .delete()
       .eq('id', stageId)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
 
     if (error) throw new Error(error.message)
   }
@@ -159,7 +159,7 @@ class KanbanService {
         .from('kanban_stages')
         .update({ position: stage.position, updated_at: new Date().toISOString() })
         .eq('id', stage.id)
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
     )
 
     await Promise.all(updates)
@@ -174,7 +174,7 @@ class KanbanService {
       .from('kanban_stages')
       .select('*')
       .eq('id', stageId)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .single()
 
     if (error) {

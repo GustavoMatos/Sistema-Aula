@@ -13,7 +13,7 @@ const getParam = (params: Record<string, string>, key: string): string => params
  */
 export async function createLead(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const userId = req.user!.id
 
     logger.info(`Creating lead for workspace: ${workspaceId}`)
@@ -32,7 +32,7 @@ export async function createLead(req: Request, res: Response, next: NextFunction
  */
 export async function listLeads(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const result = await leadsService.list({
       workspaceId,
@@ -60,7 +60,7 @@ export async function listLeads(req: Request, res: Response, next: NextFunction)
  */
 export async function getLead(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const lead = await leadsService.getById(id, workspaceId)
@@ -77,7 +77,7 @@ export async function getLead(req: Request, res: Response, next: NextFunction) {
  */
 export async function updateLead(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const userId = req.user!.id
     const id = getParam(req.params as Record<string, string>, 'id')
 
@@ -95,7 +95,7 @@ export async function updateLead(req: Request, res: Response, next: NextFunction
  */
 export async function deleteLead(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     await leadsService.delete(id, workspaceId)
@@ -112,7 +112,7 @@ export async function deleteLead(req: Request, res: Response, next: NextFunction
  */
 export async function updateLeadStage(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const userId = req.user!.id
     const id = getParam(req.params as Record<string, string>, 'id')
     const { stage_id } = req.body
@@ -131,7 +131,7 @@ export async function updateLeadStage(req: Request, res: Response, next: NextFun
  */
 export async function getLeadHistory(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const history = await leadsService.getHistory(id, workspaceId)
@@ -148,7 +148,7 @@ export async function getLeadHistory(req: Request, res: Response, next: NextFunc
  */
 export async function importLeads(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const userId = req.user!.id
 
     if (!req.file) {

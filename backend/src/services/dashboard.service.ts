@@ -62,49 +62,49 @@ class DashboardService {
       supabase
         .from('leads')
         .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', workspaceId),
+        .eq('tenant_id', workspaceId),
 
       // Leads this month
       supabase
         .from('leads')
         .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .gte('created_at', startOfMonth.toISOString()),
 
       // Leads last month
       supabase
         .from('leads')
         .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .gte('created_at', startOfLastMonth.toISOString())
         .lte('created_at', endOfLastMonth.toISOString()),
 
       // Total messages
       supabase
         .from('messages')
-        .select('id, leads!inner(workspace_id)', { count: 'exact', head: true })
-        .eq('leads.workspace_id', workspaceId),
+        .select('id, leads!inner(tenant_id)', { count: 'exact', head: true })
+        .eq('leads.tenant_id', workspaceId),
 
       // Messages this week
       supabase
         .from('messages')
-        .select('id, leads!inner(workspace_id)', { count: 'exact', head: true })
-        .eq('leads.workspace_id', workspaceId)
+        .select('id, leads!inner(tenant_id)', { count: 'exact', head: true })
+        .eq('leads.tenant_id', workspaceId)
         .gte('created_at', startOfWeek.toISOString()),
 
       // Pending followups
       supabase
         .from('followups')
-        .select('id, leads!inner(workspace_id)', { count: 'exact', head: true })
-        .eq('leads.workspace_id', workspaceId)
+        .select('id, leads!inner(tenant_id)', { count: 'exact', head: true })
+        .eq('leads.tenant_id', workspaceId)
         .eq('status', 'pending')
         .gte('due_date', now.toISOString()),
 
       // Overdue followups
       supabase
         .from('followups')
-        .select('id, leads!inner(workspace_id)', { count: 'exact', head: true })
-        .eq('leads.workspace_id', workspaceId)
+        .select('id, leads!inner(tenant_id)', { count: 'exact', head: true })
+        .eq('leads.tenant_id', workspaceId)
         .eq('status', 'pending')
         .lt('due_date', now.toISOString()),
 
@@ -112,13 +112,13 @@ class DashboardService {
       supabase
         .from('leads')
         .select('stage_id, kanban_stages(name, color)')
-        .eq('workspace_id', workspaceId),
+        .eq('tenant_id', workspaceId),
 
       // Leads by source
       supabase
         .from('leads')
         .select('source')
-        .eq('workspace_id', workspaceId),
+        .eq('tenant_id', workspaceId),
 
       // Leads over time (last 30 days)
       this.getLeadsOverTime(workspaceId, 30),
@@ -197,7 +197,7 @@ class DashboardService {
     const { data } = await supabase
       .from('leads')
       .select('created_at')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: true })
 
@@ -234,8 +234,8 @@ class DashboardService {
 
     const { data } = await supabase
       .from('messages')
-      .select('direction, created_at, leads!inner(workspace_id)')
-      .eq('leads.workspace_id', workspaceId)
+      .select('direction, created_at, leads!inner(tenant_id)')
+      .eq('leads.tenant_id', workspaceId)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: true })
 
@@ -282,7 +282,7 @@ class DashboardService {
         kanban_stages(name, color),
         messages(id)
       `)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .limit(100)
 
     if (!leads) return []
@@ -311,9 +311,9 @@ class DashboardService {
         action,
         metadata,
         created_at,
-        leads!inner(id, name, workspace_id)
+        leads!inner(id, name, tenant_id)
       `)
-      .eq('leads.workspace_id', workspaceId)
+      .eq('leads.tenant_id', workspaceId)
       .order('created_at', { ascending: false })
       .limit(limit)
 

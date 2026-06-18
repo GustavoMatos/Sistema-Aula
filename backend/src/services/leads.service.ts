@@ -6,7 +6,7 @@ import type { CreateLeadInput, UpdateLeadInput, ListLeadsQuery } from '../valida
 
 export interface Lead {
   id: string
-  workspace_id: string
+  tenant_id: string
   stage_id: string
   name: string
   phone: string
@@ -51,7 +51,7 @@ class LeadsService {
       const { data: firstStage, error: stageError } = await supabase
         .from('kanban_stages')
         .select('id')
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .order('position', { ascending: true })
         .limit(1)
         .single()
@@ -67,7 +67,7 @@ class LeadsService {
         .from('kanban_stages')
         .select('id')
         .eq('id', stageId)
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .single()
 
       if (stageError || !stage) {
@@ -79,7 +79,7 @@ class LeadsService {
     const { data: existingLead } = await supabase
       .from('leads')
       .select('id')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .eq('phone', data.phone)
       .single()
 
@@ -90,7 +90,7 @@ class LeadsService {
     const { data: lead, error } = await supabase
       .from('leads')
       .insert({
-        workspace_id: workspaceId,
+        tenant_id: workspaceId,
         stage_id: stageId,
         name: data.name,
         phone: data.phone,
@@ -128,7 +128,7 @@ class LeadsService {
     let query = supabase
       .from('leads')
       .select('*, kanban_stages(id, name, color, position)', { count: 'exact' })
-      .eq('workspace_id', filters.workspaceId)
+      .eq('tenant_id', filters.workspaceId)
 
     // Apply filters
     if (filters.stage_id) {
@@ -191,7 +191,7 @@ class LeadsService {
       .from('leads')
       .select('*, kanban_stages(id, name, color, position)')
       .eq('id', id)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .single()
 
     if (error || !lead) {
@@ -213,7 +213,7 @@ class LeadsService {
       const { data: existingLead } = await supabase
         .from('leads')
         .select('id')
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .eq('phone', data.phone)
         .neq('id', id)
         .single()
@@ -261,7 +261,7 @@ class LeadsService {
       .from('leads')
       .delete()
       .eq('id', id)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
 
     if (error) {
       logger.error('Failed to delete lead', { error })
@@ -282,7 +282,7 @@ class LeadsService {
       .from('kanban_stages')
       .select('id')
       .eq('id', stageId)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .single()
 
     if (stageError || !stage) {

@@ -9,7 +9,7 @@ import {
 // List all stages
 export async function listStages(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const stages = await kanbanService.listStages(workspaceId)
 
     res.json({ stages })
@@ -21,7 +21,7 @@ export async function listStages(req: Request, res: Response, next: NextFunction
 // Get kanban board with leads
 export async function getBoard(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const columns = await kanbanService.getBoard(workspaceId)
 
     res.json({ columns })
@@ -33,7 +33,7 @@ export async function getBoard(req: Request, res: Response, next: NextFunction) 
 // Create a new stage
 export async function createStage(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const validation = createStageSchema.safeParse(req.body)
 
     if (!validation.success) {
@@ -56,7 +56,7 @@ export async function createStage(req: Request, res: Response, next: NextFunctio
 export async function updateStage(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const validation = updateStageSchema.safeParse(req.body)
 
     if (!validation.success) {
@@ -79,7 +79,7 @@ export async function updateStage(req: Request, res: Response, next: NextFunctio
 export async function deleteStage(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     await kanbanService.deleteStage(id, workspaceId)
 
@@ -92,7 +92,7 @@ export async function deleteStage(req: Request, res: Response, next: NextFunctio
 // Reorder stages
 export async function reorderStages(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const validation = reorderStagesSchema.safeParse(req.body)
 
     if (!validation.success) {
@@ -115,7 +115,7 @@ export async function reorderStages(req: Request, res: Response, next: NextFunct
 export async function getStage(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const stage = await kanbanService.getStageById(id, workspaceId)
 

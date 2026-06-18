@@ -9,7 +9,7 @@ import {
 // List followups
 export async function listFollowups(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const validation = listFollowupsSchema.safeParse(req.query)
 
     if (!validation.success) {
@@ -32,7 +32,7 @@ export async function listFollowups(req: Request, res: Response, next: NextFunct
 export async function getFollowup(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const followup = await followupsService.getById(id, workspaceId)
 
@@ -50,7 +50,7 @@ export async function getFollowup(req: Request, res: Response, next: NextFunctio
 // Create followup
 export async function createFollowup(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const userId = req.user!.id
     const validation = createFollowupSchema.safeParse(req.body)
 
@@ -74,7 +74,7 @@ export async function createFollowup(req: Request, res: Response, next: NextFunc
 export async function updateFollowup(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const validation = updateFollowupSchema.safeParse(req.body)
 
     if (!validation.success) {
@@ -97,7 +97,7 @@ export async function updateFollowup(req: Request, res: Response, next: NextFunc
 export async function deleteFollowup(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     await followupsService.delete(id, workspaceId)
 
@@ -111,7 +111,7 @@ export async function deleteFollowup(req: Request, res: Response, next: NextFunc
 export async function completeFollowup(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const followup = await followupsService.complete(id, workspaceId)
 
@@ -124,7 +124,7 @@ export async function completeFollowup(req: Request, res: Response, next: NextFu
 // Get today's followups
 export async function getTodayFollowups(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const followups = await followupsService.getTodayFollowups(workspaceId)
 
@@ -137,7 +137,7 @@ export async function getTodayFollowups(req: Request, res: Response, next: NextF
 // Get overdue followups
 export async function getOverdueFollowups(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const followups = await followupsService.getOverdueFollowups(workspaceId)
 
@@ -150,7 +150,7 @@ export async function getOverdueFollowups(req: Request, res: Response, next: Nex
 // Get followups counts
 export async function getFollowupsCounts(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const counts = await followupsService.getCountsByStatus(workspaceId)
 

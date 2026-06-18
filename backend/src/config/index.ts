@@ -24,6 +24,12 @@ const envSchema = z.object({
 
   // Webhook (production)
   WEBHOOK_BASE_URL: optionalUrl,
+
+  // Kestra (AI Agent)
+  KESTRA_URL: optionalUrl,
+  KESTRA_USERNAME: optionalString,
+  KESTRA_PASSWORD: optionalString,
+  AI_API_KEY: optionalString,
 })
 
 // Parse and validate
@@ -76,6 +82,13 @@ export const config = {
   evolution: {
     url: env.EVOLUTION_API_URL || '',
     apiKey: env.EVOLUTION_API_KEY || '',
+  },
+
+  kestra: {
+    url: env.KESTRA_URL || '',
+    username: env.KESTRA_USERNAME || '',
+    password: env.KESTRA_PASSWORD || '',
+    aiApiKey: env.AI_API_KEY || '',
   },
 
   frontendUrl: env.FRONTEND_URL,

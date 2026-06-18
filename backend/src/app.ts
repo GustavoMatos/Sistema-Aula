@@ -19,6 +19,7 @@ const allowedOrigins = [
   config.frontendUrl,
   'https://gangus.netlify.app',
   'http://localhost:5173',
+  'http://localhost:5174',
 ].filter(Boolean)
 
 app.use(cors({

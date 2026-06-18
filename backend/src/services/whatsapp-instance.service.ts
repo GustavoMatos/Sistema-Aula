@@ -4,7 +4,7 @@ import { NotFoundError } from '../utils/errors.js'
 
 export interface WhatsAppInstance {
   id: string
-  workspace_id: string
+  tenant_id: string
   instance_name: string
   api_key: string | null
   api_url: string | null
@@ -16,7 +16,7 @@ export interface WhatsAppInstance {
 }
 
 export interface CreateInstanceDTO {
-  workspace_id: string
+  tenant_id: string
   instance_name: string
   api_key?: string
   api_url?: string
@@ -39,7 +39,7 @@ class WhatsAppInstanceService {
     const { data: instance, error } = await supabase
       .from('whatsapp_instances')
       .insert({
-        workspace_id: data.workspace_id,
+        tenant_id: data.tenant_id,
         instance_name: data.instance_name,
         api_key: data.api_key,
         api_url: data.api_url,
@@ -66,7 +66,7 @@ class WhatsAppInstanceService {
     const { data: instances, error } = await supabase
       .from('whatsapp_instances')
       .select('*')
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -89,7 +89,7 @@ class WhatsAppInstanceService {
       .eq('id', id)
 
     if (workspaceId) {
-      query = query.eq('workspace_id', workspaceId)
+      query = query.eq('tenant_id', workspaceId)
     }
 
     const { data: instance, error } = await query.single()
@@ -111,7 +111,7 @@ class WhatsAppInstanceService {
       .from('whatsapp_instances')
       .select('*')
       .eq('instance_name', instanceName)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .single()
 
     if (error) {

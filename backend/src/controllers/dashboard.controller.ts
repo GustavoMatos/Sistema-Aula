@@ -4,7 +4,7 @@ import { dashboardService } from '../services/dashboard.service.js'
 class DashboardController {
   async getStats(req: Request, res: Response): Promise<void> {
     try {
-      const workspaceId = req.user?.workspace_id
+      const workspaceId = req.user?.tenant_id
 
       if (!workspaceId) {
         res.status(401).json({ error: 'Workspace not found' })
@@ -21,7 +21,7 @@ class DashboardController {
 
   async getRecentActivity(req: Request, res: Response): Promise<void> {
     try {
-      const workspaceId = req.user?.workspace_id
+      const workspaceId = req.user?.tenant_id
 
       if (!workspaceId) {
         res.status(401).json({ error: 'Workspace not found' })

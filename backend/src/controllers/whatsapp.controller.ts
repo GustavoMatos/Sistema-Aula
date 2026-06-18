@@ -14,7 +14,7 @@ const getParam = (params: Record<string, string>, key: string): string => params
  */
 export async function createInstance(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const { name } = req.body
 
     logger.info(`Creating WhatsApp instance: ${name} for workspace: ${workspaceId}`)
@@ -30,7 +30,7 @@ export async function createInstance(req: Request, res: Response, next: NextFunc
 
     // Save to database
     const instance = await whatsappInstanceService.create({
-      workspace_id: workspaceId,
+      tenant_id: workspaceId,
       instance_name: name,
       api_key: evolutionResponse.hash?.apikey || evolutionResponse.instance?.apikey,
     })
@@ -59,7 +59,7 @@ export async function createInstance(req: Request, res: Response, next: NextFunc
  */
 export async function listInstances(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
 
     const instances = await whatsappInstanceService.findByWorkspace(workspaceId)
 
@@ -75,7 +75,7 @@ export async function listInstances(req: Request, res: Response, next: NextFunct
  */
 export async function getInstance(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const instance = await whatsappInstanceService.findById(id, workspaceId)
@@ -92,7 +92,7 @@ export async function getInstance(req: Request, res: Response, next: NextFunctio
  */
 export async function getQRCode(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const instance = await whatsappInstanceService.findById(id, workspaceId)
@@ -119,7 +119,7 @@ export async function getQRCode(req: Request, res: Response, next: NextFunction)
  */
 export async function getStatus(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const instance = await whatsappInstanceService.findById(id, workspaceId)
@@ -156,7 +156,7 @@ export async function getStatus(req: Request, res: Response, next: NextFunction)
  */
 export async function logoutInstance(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const instance = await whatsappInstanceService.findById(id, workspaceId)
@@ -179,7 +179,7 @@ export async function logoutInstance(req: Request, res: Response, next: NextFunc
  */
 export async function deleteInstance(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const instance = await whatsappInstanceService.findById(id, workspaceId)

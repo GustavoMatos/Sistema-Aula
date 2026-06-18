@@ -22,7 +22,7 @@ export interface Message {
 }
 
 export interface SendMessageDTO extends SendMessageInput {
-  workspace_id: string
+  tenant_id: string
   user_id?: string
 }
 
@@ -36,7 +36,7 @@ class MessagesService {
       .from('leads')
       .select('*')
       .eq('id', data.lead_id)
-      .eq('workspace_id', data.workspace_id)
+      .eq('tenant_id', data.tenant_id)
       .single()
 
     if (leadError || !lead) {
@@ -51,7 +51,7 @@ class MessagesService {
     const { data: instance, error: instanceError } = await supabase
       .from('whatsapp_instances')
       .select('*')
-      .eq('workspace_id', data.workspace_id)
+      .eq('tenant_id', data.tenant_id)
       .eq('status', 'connected')
       .limit(1)
       .single()
@@ -156,7 +156,7 @@ class MessagesService {
       .from('leads')
       .select('id')
       .eq('id', leadId)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .single()
 
     if (leadError || !lead) {
@@ -188,7 +188,7 @@ class MessagesService {
   async getById(id: string, workspaceId: string): Promise<Message> {
     const { data: message, error } = await supabase
       .from('messages')
-      .select('*, leads!inner(workspace_id)')
+      .select('*, leads!inner(tenant_id)')
       .eq('id', id)
       .single()
 
@@ -197,7 +197,7 @@ class MessagesService {
     }
 
     // Verify workspace access through lead
-    if (message.leads?.workspace_id !== workspaceId) {
+    if (message.leads?.tenant_id !== workspaceId) {
       throw new NotFoundError('Mensagem não encontrada')
     }
 

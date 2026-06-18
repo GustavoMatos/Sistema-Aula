@@ -3,7 +3,7 @@ import type { CreateFollowupDTO, UpdateFollowupDTO, ListFollowupsQuery } from '.
 
 export interface Followup {
   id: string
-  workspace_id: string
+  tenant_id: string
   lead_id: string
   user_id: string
   title: string
@@ -38,7 +38,7 @@ class FollowupsService {
     let countQuery = supabase
       .from('followups')
       .select('id', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
 
     let dataQuery = supabase
       .from('followups')
@@ -46,7 +46,7 @@ class FollowupsService {
         *,
         lead:leads(id, name, phone)
       `)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
 
     // Apply filters
     if (lead_id) {
@@ -117,7 +117,7 @@ class FollowupsService {
         lead:leads(id, name, phone)
       `)
       .eq('id', id)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .single()
 
     if (error) {
@@ -135,7 +135,7 @@ class FollowupsService {
       .from('leads')
       .select('id')
       .eq('id', data.lead_id)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .single()
 
     if (leadError || !lead) {
@@ -145,7 +145,7 @@ class FollowupsService {
     const { data: followup, error } = await supabase
       .from('followups')
       .insert({
-        workspace_id: workspaceId,
+        tenant_id: workspaceId,
         user_id: userId,
         lead_id: data.lead_id,
         title: data.title,
@@ -187,7 +187,7 @@ class FollowupsService {
       .from('followups')
       .update(updateData)
       .eq('id', id)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .select(`
         *,
         lead:leads(id, name, phone)
@@ -206,7 +206,7 @@ class FollowupsService {
       .from('followups')
       .delete()
       .eq('id', id)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
 
     if (error) throw new Error(error.message)
   }
@@ -232,7 +232,7 @@ class FollowupsService {
         *,
         lead:leads(id, name, phone)
       `)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .eq('status', 'pending')
       .gte('due_date', today.toISOString())
       .lt('due_date', tomorrow.toISOString())
@@ -253,7 +253,7 @@ class FollowupsService {
         *,
         lead:leads(id, name, phone)
       `)
-      .eq('workspace_id', workspaceId)
+      .eq('tenant_id', workspaceId)
       .eq('status', 'pending')
       .lt('due_date', now)
       .order('due_date', { ascending: true })
@@ -272,17 +272,17 @@ class FollowupsService {
       supabase
         .from('followups')
         .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .eq('status', 'pending'),
       supabase
         .from('followups')
         .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .eq('status', 'completed'),
       supabase
         .from('followups')
         .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', workspaceId)
+        .eq('tenant_id', workspaceId)
         .eq('status', 'pending')
         .lt('due_date', now),
     ])

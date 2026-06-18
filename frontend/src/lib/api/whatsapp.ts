@@ -2,7 +2,7 @@ import { apiClient } from './client'
 
 export interface WhatsAppInstance {
   id: string
-  workspace_id: string
+  tenant_id: string
   instance_name: string
   api_key: string | null
   api_url: string | null

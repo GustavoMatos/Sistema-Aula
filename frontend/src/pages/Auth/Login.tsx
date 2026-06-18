@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -61,7 +61,12 @@ export function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Senha</Label>
+                <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                  Esqueci minha senha
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -77,11 +82,10 @@ export function Login() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
-            <p className="text-sm text-gray-600 text-center">
-              Ainda nao tem conta?{' '}
-              <Link to="/register" className="text-blue-600 hover:underline">
-                Criar conta
-              </Link>
+            <p className="text-sm text-gray-500 text-center">
+              O acesso ao sistema e feito apenas por convite.
+              <br />
+              Entre em contato com o administrador da sua empresa.
             </p>
           </CardFooter>
         </form>

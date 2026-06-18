@@ -11,14 +11,14 @@ const getParam = (params: Record<string, string>, key: string): string => params
  */
 export async function sendMessage(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const userId = req.user!.id
     const { lead_id, type, content, media_url, caption } = req.body
 
     logger.info(`Sending ${type} message to lead: ${lead_id}`)
 
     const message = await messagesService.send({
-      workspace_id: workspaceId,
+      tenant_id: workspaceId,
       user_id: userId,
       lead_id,
       type,
@@ -39,7 +39,7 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
  */
 export async function getLeadMessages(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const leadId = getParam(req.params as Record<string, string>, 'leadId')
     const limit = parseInt(req.query.limit as string) || 50
     const offset = parseInt(req.query.offset as string) || 0
@@ -58,7 +58,7 @@ export async function getLeadMessages(req: Request, res: Response, next: NextFun
  */
 export async function getMessage(req: Request, res: Response, next: NextFunction) {
   try {
-    const workspaceId = req.user!.workspace_id
+    const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
     const message = await messagesService.getById(id, workspaceId)

@@ -1,22 +1,30 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Kanban, Settings, MessageSquare, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, Kanban, Settings, MessageSquare, LogOut, Building2, Bot } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Leads', href: '/leads', icon: Users },
-  { name: 'Kanban', href: '/kanban', icon: Kanban },
-  { name: 'WhatsApp', href: '/whatsapp', icon: MessageSquare },
-  { name: 'Configuracoes', href: '/settings', icon: Settings },
+const baseNavigation = [
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['superadmin', 'admin_tenant', 'user_tenant'] },
+  { name: 'Leads', href: '/leads', icon: Users, roles: ['superadmin', 'admin_tenant', 'user_tenant'] },
+  { name: 'Kanban', href: '/kanban', icon: Kanban, roles: ['superadmin', 'admin_tenant', 'user_tenant'] },
+  { name: 'WhatsApp', href: '/whatsapp', icon: MessageSquare, roles: ['superadmin', 'admin_tenant'] },
+  { name: 'Usuários', href: '/usuarios', icon: Building2, roles: ['superadmin', 'admin_tenant'] },
+  { name: 'Assistente IA', href: '/assistente', icon: Bot, roles: ['superadmin', 'admin_tenant', 'user_tenant'] },
+  { name: 'Configurações', href: '/settings', icon: Settings, roles: ['superadmin', 'admin_tenant', 'user_tenant'] },
 ]
 
 export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const { currentUser } = useCurrentUser()
+
+  const navigation = baseNavigation.filter((item) =>
+    !currentUser || item.roles.includes(currentUser.role)
+  )
 
   const handleLogout = async () => {
     await signOut()

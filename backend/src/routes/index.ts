@@ -7,6 +7,10 @@ import kanbanRoutes from './kanban.routes.js'
 import followupsRoutes from './followups.routes.js'
 import webhookRoutes from './webhook.routes.js'
 import dashboardRoutes from './dashboard.routes.js'
+import invitationsRoutes from './invitations.routes.js'
+import tenantsRoutes from './tenants.routes.js'
+import usersRoutes from './users.routes.js'
+import agentRoutes from './agent.routes.js'
 
 const router = Router()
 
@@ -15,6 +19,9 @@ router.use('/health', healthRoutes)
 
 // Webhooks (no auth - receives from Evolution API)
 router.use('/webhooks', webhookRoutes)
+
+// Invitations (public routes for accept, protected for manage)
+router.use('/invitations', invitationsRoutes)
 
 // Dashboard (auth handled in routes file)
 router.use('/dashboard', dashboardRoutes)
@@ -33,5 +40,14 @@ router.use('/kanban', kanbanRoutes)
 
 // Follow-ups (auth handled in routes file)
 router.use('/followups', followupsRoutes)
+
+// Tenants (superadmin only)
+router.use('/tenants', tenantsRoutes)
+
+// Users (admin routes for managing users)
+router.use('/users', usersRoutes)
+
+// AI Agent (Kestra integration)
+router.use('/agent', agentRoutes)
 
 export default router

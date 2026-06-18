@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 
 export interface KanbanStage {
   id: string
-  workspace_id: string
+  tenant_id: string
   name: string
   color: string
   position: number

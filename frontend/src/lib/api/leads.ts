@@ -2,7 +2,7 @@ import { apiClient } from './client'
 
 export interface Lead {
   id: string
-  workspace_id: string
+  tenant_id: string
   stage_id: string
   name: string
   phone: string
