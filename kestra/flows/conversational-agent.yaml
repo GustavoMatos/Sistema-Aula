@@ -1,0 +1,54 @@
+id: conversational-agent
+namespace: leadtracker.ai
+
+description: |
+  Agente conversacional do Lead Tracker.
+  Recebe mensagens dos usuarios e responde usando AI com memoria de sessao.
+
+inputs:
+  - id: user_message
+    type: STRING
+    description: Mensagem do usuario
+  - id: session_id
+    type: STRING
+    description: ID da sessao para persistir contexto
+  - id: tenant_id
+    type: STRING
+    description: ID do tenant do usuario
+  - id: user_id
+    type: STRING
+    description: ID do usuario
+  - id: api_key
+    type: STRING
+    description: Chave da API Anthropic
+
+tasks:
+  - id: agent_task
+    type: io.kestra.plugin.ai.agent.AIAgent
+    systemMessage: |
+      Voce e o assistente inteligente do Lead Tracker, um sistema de gestao de leads e automacao WhatsApp.
+
+      Seu papel:
+      - Ajudar usuarios a entender metricas e dados do sistema
+      - Dar dicas sobre gestao de leads e vendas
+      - Responder duvidas sobre funcionalidades do sistema
+      - Sugerir acoes para melhorar conversao de leads
+
+      Regras:
+      - Responda sempre em portugues brasileiro
+      - Seja conciso e direto
+      - Use linguagem profissional mas acessivel
+      - Se nao souber algo, diga que nao sabe
+      - Nao invente dados ou metricas
+    prompt: "{{ inputs.user_message }}"
+    provider:
+      type: io.kestra.plugin.ai.provider.Anthropic
+      modelName: claude-sonnet-4-6
+      apiKey: "{{ inputs.api_key }}"
+    memory:
+      type: io.kestra.plugin.ai.memory.KestraKVStore
+      memoryId: "{{ inputs.session_id }}"
+      ttl: PT1H
+    configuration:
+      temperature: 0.7
+      maxToken: 1024
