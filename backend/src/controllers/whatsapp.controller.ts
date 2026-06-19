@@ -89,13 +89,68 @@ export async function getInstance(req: Request, res: Response, next: NextFunctio
 /**
  * Get QR Code for instance connection
  * GET /api/whatsapp/instances/:id/qr
+ *
+ * Auto-recovery: if instance doesn't exist in Evolution API or returns error,
+ * automatically recreates it, configures webhook, and returns QR code.
  */
 export async function getQRCode(req: Request, res: Response, next: NextFunction) {
   try {
     const workspaceId = req.user!.tenant_id
     const id = getParam(req.params as Record<string, string>, 'id')
 
-    const instance = await whatsappInstanceService.findById(id, workspaceId)
+    let instance = await whatsappInstanceService.findById(id, workspaceId)
+
+    // Check if instance exists in Evolution API
+    let needsRecreation = false
+    try {
+      await evolutionService.getConnectionStatus(
+        instance.instance_name,
+        instance.api_key || undefined
+      )
+    } catch (statusError: unknown) {
+      const axiosErr = statusError as { response?: { status?: number } }
+      const status = axiosErr?.response?.status
+      if (status === 404 || status === 500 || status === undefined) {
+        needsRecreation = true
+        logger.warn(`Instance ${instance.instance_name} not found in Evolution API (status: ${status}), recreating...`)
+      }
+    }
+
+    if (needsRecreation) {
+      // Try to delete old instance in Evolution (ignore errors)
+      try {
+        await evolutionService.deleteInstance(instance.instance_name, instance.api_key || undefined)
+      } catch {
+        // Instance may not exist, ignore
+      }
+
+      // Recreate instance in Evolution API
+      const evolutionResponse = await evolutionService.createInstance(instance.instance_name)
+      const newApiKey = evolutionResponse.hash?.apikey || evolutionResponse.instance?.apikey
+
+      // Update api_key in database
+      if (newApiKey) {
+        instance = await whatsappInstanceService.update(id, { api_key: newApiKey })
+      }
+
+      // Configure webhook
+      const webhookUrl = config.webhookBaseUrl
+        ? `${config.webhookBaseUrl}/api/webhooks/evolution`
+        : undefined
+
+      if (webhookUrl) {
+        try {
+          await evolutionService.setWebhook(instance.instance_name, {
+            url: webhookUrl,
+            events: ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE', 'QRCODE_UPDATED'],
+          }, newApiKey || instance.api_key || undefined)
+        } catch (webhookError) {
+          logger.warn('Failed to configure webhook on recreated instance', { error: webhookError })
+        }
+      }
+
+      logger.info(`Instance ${instance.instance_name} recreated successfully`)
+    }
 
     // Get QR from Evolution API
     const qrResponse = await evolutionService.getQRCode(

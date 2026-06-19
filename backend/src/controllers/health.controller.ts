@@ -13,7 +13,7 @@ export async function healthCheck(_req: Request, res: Response) {
 
   // Check Supabase connection
   try {
-    const { error } = await supabase.from('workspaces').select('id').limit(1)
+    const { error } = await supabase.from('tenants').select('id').limit(1)
     checks.services.database = error ? 'error' : 'ok'
   } catch {
     checks.services.database = 'error'
