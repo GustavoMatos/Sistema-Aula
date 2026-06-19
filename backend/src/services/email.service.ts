@@ -1,7 +1,13 @@
 import { Resend } from 'resend'
 import { logger } from '../utils/logger.js'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let resend: Resend | null = null
+
+function getResend(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null
+  if (!resend) resend = new Resend(process.env.RESEND_API_KEY)
+  return resend
+}
 
 const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev'
 const APP_NAME = process.env.APP_NAME || 'Lead Tracker'
@@ -19,7 +25,8 @@ export async function sendInvitationEmail({
   role: string
   invitedByName?: string
 }): Promise<void> {
-  if (!process.env.RESEND_API_KEY) {
+  const resendClient = getResend()
+  if (!resendClient) {
     logger.warn('RESEND_API_KEY not set — skipping email send')
     return
   }
@@ -27,7 +34,7 @@ export async function sendInvitationEmail({
   const roleLabel = role === 'admin_tenant' ? 'Administrador' : 'Usuário'
   const invitedBy = invitedByName || 'Um administrador'
 
-  const { error } = await resend.emails.send({
+  const { error } = await resendClient.emails.send({
     from: FROM_EMAIL,
     to,
     subject: `Você foi convidado para ${tenantName}`,
