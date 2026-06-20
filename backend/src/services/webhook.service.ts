@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase.js'
 import { leadHistoryService } from './lead-history.service.js'
+import { sdrService } from './sdr.service.js'
 
 // Evolution API v2 webhook event types
 export interface EvolutionWebhookEvent {
@@ -66,7 +67,7 @@ class WebhookService {
       const contentType = this.getContentType(message)
 
       // Find or create lead
-      const lead = await this.findOrCreateLead(instanceName, phone, pushName || 'Sem nome')
+      const { lead, isNew } = await this.findOrCreateLead(instanceName, phone, pushName || 'Sem nome')
 
       if (!lead) {
         console.error('Could not find or create lead for phone:', phone)
@@ -93,6 +94,17 @@ class WebhookService {
           content_type: contentType,
         },
       })
+
+      // SDR Agent: start session for new leads, forward messages for existing
+      if (isNew) {
+        sdrService.startSession(lead.id, lead.tenant_id).catch(err =>
+          console.error('[SDR] Failed to start session:', err)
+        )
+      } else if (content) {
+        sdrService.processIncomingMessage(lead.id, lead.tenant_id, content).catch(err =>
+          console.error('[SDR] Failed to process message:', err)
+        )
+      }
     } catch (error) {
       console.error('Error processing incoming message:', error)
       throw error
@@ -177,7 +189,7 @@ class WebhookService {
     instanceName: string,
     phone: string,
     name: string
-  ): Promise<{ id: string; tenant_id: string } | null> {
+  ): Promise<{ lead: { id: string; tenant_id: string } | null; isNew: boolean }> {
     // Get workspace from instance
     const { data: instance, error: instanceError } = await supabase
       .from('whatsapp_instances')
@@ -187,7 +199,7 @@ class WebhookService {
 
     if (instanceError || !instance) {
       console.error('Instance not found:', instanceName)
-      return null
+      return { lead: null, isNew: false }
     }
 
     const workspaceId = instance.tenant_id
@@ -201,7 +213,7 @@ class WebhookService {
       .single()
 
     if (existingLead) {
-      return existingLead
+      return { lead: existingLead, isNew: false }
     }
 
     // Get default stage
@@ -215,7 +227,7 @@ class WebhookService {
 
     if (!defaultStage) {
       console.error('No default stage found for workspace:', workspaceId)
-      return null
+      return { lead: null, isNew: false }
     }
 
     // Create new lead
@@ -234,7 +246,7 @@ class WebhookService {
 
     if (createError || !newLead) {
       console.error('Error creating lead:', createError)
-      return null
+      return { lead: null, isNew: false }
     }
 
     // Record lead creation in history
@@ -244,7 +256,7 @@ class WebhookService {
       metadata: { source: 'whatsapp_webhook' },
     })
 
-    return newLead
+    return { lead: newLead, isNew: true }
   }
 
   private async saveMessage(

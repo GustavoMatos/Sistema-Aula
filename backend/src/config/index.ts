@@ -30,6 +30,9 @@ const envSchema = z.object({
   KESTRA_USERNAME: optionalString,
   KESTRA_PASSWORD: optionalString,
   AI_API_KEY: optionalString,
+
+  // SDR Agent
+  DEFAULT_ADVISOR_EMAIL: optionalString,
 })
 
 // Parse and validate
@@ -93,4 +96,7 @@ export const config = {
 
   frontendUrl: env.FRONTEND_URL,
   webhookBaseUrl: env.WEBHOOK_BASE_URL || '',
+  sdr: {
+    defaultAdvisorEmail: env.DEFAULT_ADVISOR_EMAIL || '',
+  },
 }
