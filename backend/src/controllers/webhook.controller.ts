@@ -1,87 +1,72 @@
 import { Request, Response } from 'express'
 import { webhookService, EvolutionWebhookEvent, MessageData } from '../services/webhook.service.js'
 
-class WebhookController {
-  // Main webhook handler for Evolution API v2
-  async handleEvolutionWebhook(req: Request, res: Response): Promise<void> {
-    try {
-      const event = req.body as EvolutionWebhookEvent
+function normalizeEvent(raw: string): string {
+  return raw.toLowerCase().replace(/_/g, '.')
+}
 
-      console.log(`[Webhook] Received event: ${event.event} from instance: ${event.instance}`)
+export async function handleEvolutionWebhook(req: Request, res: Response): Promise<void> {
+  try {
+    const event = req.body as EvolutionWebhookEvent
+    const normalized = normalizeEvent(event.event || '')
 
-      // Process based on event type
-      switch (event.event) {
-        case 'messages.upsert':
-          await this.handleMessagesUpsert(event)
-          break
+    console.log(`[Webhook] Received event: ${event.event} (${normalized}) from instance: ${event.instance}`)
 
-        case 'messages.update':
-          await this.handleMessagesUpdate(event)
-          break
+    switch (normalized) {
+      case 'messages.upsert':
+        await handleMessagesUpsert(event)
+        break
 
-        case 'connection.update':
-          await this.handleConnectionUpdate(event)
-          break
+      case 'messages.update':
+        await webhookService.processMessageStatus(event.instance, event.data)
+        break
 
-        case 'qrcode.updated':
-          // QR code updates are handled by the frontend polling
-          console.log(`[Webhook] QR code updated for instance: ${event.instance}`)
-          break
+      case 'connection.update':
+        if (event.data.state) {
+          await webhookService.processConnectionStatus(event.instance, event.data.state as string)
+        }
+        break
 
-        default:
-          console.log(`[Webhook] Unhandled event type: ${event.event}`)
-      }
+      case 'qrcode.updated':
+        console.log(`[Webhook] QR code updated for instance: ${event.instance}`)
+        break
 
-      res.status(200).json({ success: true })
-    } catch (error) {
-      console.error('[Webhook] Error processing webhook:', error)
-      res.status(500).json({ error: 'Internal server error' })
-    }
-  }
-
-  private async handleMessagesUpsert(event: EvolutionWebhookEvent): Promise<void> {
-    const data = event.data as unknown as MessageData
-
-    // Skip if no message data
-    if (!data || !data.key) {
-      console.log('[Webhook] No message data in upsert event')
-      return
+      default:
+        console.log(`[Webhook] Unhandled event type: ${event.event}`)
     }
 
-    // Skip group messages (only handle private chats)
-    if (data.key.remoteJid.includes('@g.us')) {
-      console.log('[Webhook] Skipping group message')
-      return
-    }
-
-    // Skip status broadcasts
-    if (data.key.remoteJid === 'status@broadcast') {
-      console.log('[Webhook] Skipping status broadcast')
-      return
-    }
-
-    await webhookService.processIncomingMessage(event.instance, data)
-  }
-
-  private async handleMessagesUpdate(event: EvolutionWebhookEvent): Promise<void> {
-    await webhookService.processMessageStatus(event.instance, event.data)
-  }
-
-  private async handleConnectionUpdate(event: EvolutionWebhookEvent): Promise<void> {
-    const status = event.data.state as string
-    if (status) {
-      await webhookService.processConnectionStatus(event.instance, status)
-    }
-  }
-
-  // Health check endpoint for webhook
-  async healthCheck(_req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      status: 'ok',
-      service: 'webhook',
-      timestamp: new Date().toISOString(),
-    })
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('[Webhook] Error processing webhook:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
 
-export const webhookController = new WebhookController()
+async function handleMessagesUpsert(event: EvolutionWebhookEvent): Promise<void> {
+  const data = event.data as unknown as MessageData
+
+  if (!data || !data.key) {
+    console.log('[Webhook] No message data in upsert event')
+    return
+  }
+
+  if (data.key.remoteJid.includes('@g.us')) {
+    console.log('[Webhook] Skipping group message')
+    return
+  }
+
+  if (data.key.remoteJid === 'status@broadcast') {
+    console.log('[Webhook] Skipping status broadcast')
+    return
+  }
+
+  await webhookService.processIncomingMessage(event.instance, data)
+}
+
+export async function webhookHealthCheck(_req: Request, res: Response): Promise<void> {
+  res.status(200).json({
+    status: 'ok',
+    service: 'webhook',
+    timestamp: new Date().toISOString(),
+  })
+}
