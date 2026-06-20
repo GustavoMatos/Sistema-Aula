@@ -25,7 +25,7 @@ const ACTIVITY_ICONS = {
 
 const ACTIVITY_COLORS = {
   lead_created: 'bg-green-100 text-green-600',
-  message_sent: 'bg-blue-100 text-blue-600',
+  message_sent: 'bg-awa-gold/20 text-awa-navy',
   message_received: 'bg-purple-100 text-purple-600',
   stage_change: 'bg-yellow-100 text-yellow-600',
   followup_completed: 'bg-teal-100 text-teal-600',
@@ -78,7 +78,7 @@ export function RecentActivity({ activity, isLoading }: RecentActivityProps) {
                     {item.leadId && (
                       <Link
                         to={`/leads/${item.leadId}`}
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs text-awa-navy hover:underline font-medium"
                       >
                         Ver lead
                       </Link>

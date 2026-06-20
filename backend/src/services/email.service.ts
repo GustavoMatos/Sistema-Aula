@@ -10,7 +10,7 @@ function getResend(): Resend | null {
 }
 
 const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev'
-const APP_NAME = process.env.APP_NAME || 'Lead Tracker'
+const APP_NAME = process.env.APP_NAME || 'Lead Tracker A.W.A Capital'
 
 export async function sendInvitationEmail({
   to,

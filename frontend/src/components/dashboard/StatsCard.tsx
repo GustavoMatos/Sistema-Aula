@@ -53,8 +53,8 @@ export function StatsCard({
               </div>
             )}
           </div>
-          <div className="p-3 bg-blue-50 rounded-full">
-            <Icon className="h-6 w-6 text-blue-600" />
+          <div className="p-3 bg-awa-gold/10 rounded-full">
+            <Icon className="h-6 w-6 text-awa-navy" />
           </div>
         </div>
       </CardContent>

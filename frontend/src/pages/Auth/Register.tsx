@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { AnimatedBackground } from '@/components/auth/AnimatedBackground'
 
 export function Register() {
   const [email, setEmail] = useState('')
@@ -48,11 +49,15 @@ export function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-blue-600">Lead Tracker</CardTitle>
-          <CardDescription>Crie sua conta para comecar</CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-awa-navy px-4 relative overflow-hidden">
+      <AnimatedBackground />
+      <Card className="w-full max-w-md relative z-10 shadow-xl border-0">
+        <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-4">
+            <img src="/brand/logo-horizontal.svg" alt="A.W.A Capital" className="h-12" />
+          </div>
+          <CardTitle className="text-lg font-semibold text-awa-navy">Lead Tracker</CardTitle>
+          <CardDescription>Crie sua conta para começar</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -94,12 +99,12 @@ export function Register() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-awa-navy hover:bg-awa-navy/90" disabled={loading}>
               {loading ? 'Criando conta...' : 'Criar conta'}
             </Button>
-            <p className="text-sm text-gray-600 text-center">
-              Ja tem uma conta?{' '}
-              <Link to="/login" className="text-blue-600 hover:underline">
+            <p className="text-sm text-muted-foreground text-center">
+              Já tem uma conta?{' '}
+              <Link to="/login" className="text-awa-gold hover:underline font-medium">
                 Entrar
               </Link>
             </p>

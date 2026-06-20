@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { AnimatedBackground } from '@/components/auth/AnimatedBackground'
 
 export function ResetPassword() {
   const [password, setPassword] = useState('')
@@ -47,10 +48,14 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-blue-600">Redefinir senha</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-awa-navy px-4 relative overflow-hidden">
+      <AnimatedBackground />
+      <Card className="w-full max-w-md relative z-10 shadow-xl border-0">
+        <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-4">
+            <img src="/brand/logo-horizontal.svg" alt="A.W.A Capital" className="h-12" />
+          </div>
+          <CardTitle className="text-lg font-semibold text-awa-navy">Redefinir senha</CardTitle>
           <CardDescription>Digite sua nova senha abaixo.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -81,7 +86,7 @@ export function ResetPassword() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-awa-navy hover:bg-awa-navy/90" disabled={loading}>
               {loading ? 'Salvando...' : 'Salvar nova senha'}
             </Button>
           </CardFooter>

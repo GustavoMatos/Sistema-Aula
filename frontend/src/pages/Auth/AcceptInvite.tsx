@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { AnimatedBackground } from '@/components/auth/AnimatedBackground'
 
 interface InvitationData {
   email: string
@@ -101,8 +102,8 @@ export function AcceptInvite() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-2 text-gray-500">
+      <div className="min-h-screen flex items-center justify-center bg-awa-navy">
+        <div className="flex items-center gap-2 text-white/70">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Validando convite...</span>
         </div>
@@ -112,13 +113,13 @@ export function AcceptInvite() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-awa-navy px-4">
+        <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
               <XCircle className="h-12 w-12 text-red-500" />
             </div>
-            <CardTitle className="text-xl text-red-600">Convite Invalido</CardTitle>
+            <CardTitle className="text-xl text-red-600">Convite Inválido</CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardFooter>
@@ -137,8 +138,8 @@ export function AcceptInvite() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-awa-navy px-4">
+        <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
               <CheckCircle className="h-12 w-12 text-green-500" />
@@ -154,17 +155,21 @@ export function AcceptInvite() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-blue-600">Lead Tracker</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-awa-navy px-4 relative overflow-hidden">
+      <AnimatedBackground />
+      <Card className="w-full max-w-md relative z-10 shadow-xl border-0">
+        <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-4">
+            <img src="/brand/logo-horizontal.svg" alt="A.W.A Capital" className="h-12" />
+          </div>
+          <CardTitle className="text-lg font-semibold text-awa-navy">Lead Tracker</CardTitle>
           <CardDescription>
-            Voce foi convidado para {invitation?.tenant_name}
+            Você foi convidado para {invitation?.tenant_name}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg space-y-2 text-sm">
+            <div className="bg-awa-cream/50 p-4 rounded-lg space-y-2 text-sm">
               <p><strong>Email:</strong> {invitation?.email}</p>
               <p><strong>Empresa:</strong> {invitation?.tenant_name}</p>
               <p><strong>Funcao:</strong> {getRoleLabel(invitation?.role || '')}</p>

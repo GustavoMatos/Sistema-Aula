@@ -56,16 +56,16 @@ export function BulkActionsBar({
   if (selectedIds.length === 0) return null
 
   return (
-    <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+    <div className="flex items-center justify-between bg-awa-gold/10 border border-awa-gold/30 rounded-lg px-4 py-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-blue-700">
+        <span className="text-sm font-medium text-awa-navy">
           {selectedIds.length} lead(s) selecionado(s)
         </span>
         <Button
           variant="ghost"
           size="sm"
           onClick={onClearSelection}
-          className="text-blue-600 hover:text-blue-700"
+          className="text-awa-navy hover:text-awa-navy/80"
         >
           <X className="h-4 w-4" />
         </Button>

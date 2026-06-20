@@ -14,6 +14,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Sora", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,6 +50,14 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        awa: {
+          navy: "#002370",
+          gold: "#feb202",
+          dark: "#232323",
+          cream: "#e1decd",
+          white: "#F7F7F7",
+          black: "#1A1A1A",
         },
       },
       borderRadius: {

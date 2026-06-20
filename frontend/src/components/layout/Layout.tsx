@@ -35,9 +35,9 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r flex flex-col">
-        <div className="flex h-16 items-center px-6 border-b">
-          <h1 className="text-xl font-bold text-primary">Lead Tracker</h1>
+      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-awa-navy flex flex-col">
+        <div className="flex h-16 items-center px-6 border-b border-white/10">
+          <img src="/brand/logo-horizontal-white.svg" alt="A.W.A Capital" className="h-8" />
         </div>
         <nav className="p-4 space-y-1 flex-1">
           {navigation.map((item) => {
@@ -49,8 +49,8 @@ export function Layout() {
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-awa-gold text-awa-dark'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
                 )}
               >
                 <item.icon className="h-5 w-5" />
@@ -61,14 +61,14 @@ export function Layout() {
         </nav>
 
         {/* User info and logout */}
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-white/10">
           <div className="mb-3 px-3">
-            <p className="text-xs text-muted-foreground">Logado como</p>
-            <p className="text-sm font-medium truncate">{user?.email}</p>
+            <p className="text-xs text-white/50">Logado como</p>
+            <p className="text-sm font-medium text-white/90 truncate">{user?.email}</p>
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+            className="w-full justify-start gap-3 text-white/70 hover:text-white hover:bg-white/10"
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5" />

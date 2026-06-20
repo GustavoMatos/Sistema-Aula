@@ -73,7 +73,7 @@ export function AgentChat() {
       <div className="mb-4">
         <h1 className="text-2xl font-bold">Assistente IA</h1>
         <p className="text-muted-foreground">
-          Converse com o assistente inteligente do Lead Tracker
+          Converse com o assistente inteligente do Lead Tracker A.W.A Capital
         </p>
       </div>
 

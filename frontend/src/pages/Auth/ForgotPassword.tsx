@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { AnimatedBackground } from '@/components/auth/AnimatedBackground'
 
 export function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -37,17 +38,21 @@ export function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-blue-600">Email enviado</CardTitle>
+      <div className="min-h-screen flex items-center justify-center bg-awa-navy px-4 relative overflow-hidden">
+        <AnimatedBackground />
+        <Card className="w-full max-w-md relative z-10 shadow-xl border-0">
+          <CardHeader className="text-center pb-2">
+            <div className="flex justify-center mb-4">
+              <img src="/brand/logo-horizontal.svg" alt="A.W.A Capital" className="h-12" />
+            </div>
+            <CardTitle className="text-lg font-semibold text-awa-navy">Email enviado</CardTitle>
             <CardDescription>
-              Enviamos um link de recuperacao para <strong>{email}</strong>.
+              Enviamos um link de recuperação para <strong>{email}</strong>.
               Verifique sua caixa de entrada e spam.
             </CardDescription>
           </CardHeader>
           <CardFooter className="flex justify-center">
-            <Link to="/login" className="text-sm text-blue-600 hover:underline">
+            <Link to="/login" className="text-sm text-awa-gold hover:underline font-medium">
               Voltar ao login
             </Link>
           </CardFooter>
@@ -57,10 +62,14 @@ export function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-blue-600">Esqueci minha senha</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-awa-navy px-4 relative overflow-hidden">
+      <AnimatedBackground />
+      <Card className="w-full max-w-md relative z-10 shadow-xl border-0">
+        <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-4">
+            <img src="/brand/logo-horizontal.svg" alt="A.W.A Capital" className="h-12" />
+          </div>
+          <CardTitle className="text-lg font-semibold text-awa-navy">Esqueci minha senha</CardTitle>
           <CardDescription>
             Digite seu email e enviaremos um link para redefinir sua senha.
           </CardDescription>
@@ -81,10 +90,10 @@ export function ForgotPassword() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Enviando...' : 'Enviar link de recuperacao'}
+            <Button type="submit" className="w-full bg-awa-navy hover:bg-awa-navy/90" disabled={loading}>
+              {loading ? 'Enviando...' : 'Enviar link de recuperação'}
             </Button>
-            <Link to="/login" className="text-sm text-blue-600 hover:underline">
+            <Link to="/login" className="text-sm text-awa-gold hover:underline font-medium">
               Voltar ao login
             </Link>
           </CardFooter>
