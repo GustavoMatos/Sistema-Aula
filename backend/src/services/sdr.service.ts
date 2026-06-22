@@ -59,8 +59,27 @@ class SdrService {
       .single()
 
     if (existing) {
-      logger.info('SDR session already exists', { leadId, status: existing.status })
-      return
+      if (existing.status === 'active') {
+        logger.info('SDR session already active', { leadId })
+        return
+      }
+      if (existing.status === 'completed' || existing.status === 'disqualified') {
+        const newSessionId = `sdr-${leadId}-${Date.now()}`
+        await supabase
+          .from('sdr_sessions')
+          .update({
+            status: 'active',
+            message_count: 0,
+            collected_data: {},
+            kestra_session_id: newSessionId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id)
+        logger.info('SDR session reactivated for new lead', { leadId, newSessionId })
+      } else {
+        logger.info('SDR session exists with status', { leadId, status: existing.status })
+        return
+      }
     }
 
     const sessionId = `sdr-${leadId}`
@@ -111,7 +130,30 @@ class SdrService {
       .eq('lead_id', leadId)
       .single()
 
-    if (!session || session.status !== 'active') return
+    if (!session) return
+
+    if (session.status !== 'active') {
+      if (session.status === 'completed' || session.status === 'disqualified') {
+        const newSessionId = `sdr-${leadId}-${Date.now()}`
+        await supabase
+          .from('sdr_sessions')
+          .update({
+            status: 'active',
+            message_count: 0,
+            collected_data: {},
+            kestra_session_id: newSessionId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', session.id)
+        session.status = 'active'
+        session.message_count = 0
+        session.collected_data = {}
+        session.kestra_session_id = newSessionId
+        logger.info('SDR session reactivated', { leadId, newSessionId })
+      } else {
+        return
+      }
+    }
 
     const sdrSession = session as SdrSession
 
