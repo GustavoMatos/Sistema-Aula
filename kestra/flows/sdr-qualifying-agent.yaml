@@ -13,20 +13,42 @@ inputs:
   - id: session_id
     type: STRING
     description: ID da sessao SDR (lead_id)
+  - id: lead_id
+    type: STRING
+    description: UUID do lead no Supabase
   - id: lead_name
     type: STRING
     description: Nome do lead
+  - id: lead_phone
+    type: STRING
+    description: Telefone do lead
   - id: lead_context
     type: STRING
     description: JSON com dados coletados ate agora
   - id: current_stage
     type: STRING
     description: Estagio atual do lead no kanban
+  - id: tenant_id
+    type: STRING
+    description: ID do tenant
   - id: api_key
     type: STRING
     description: Chave da API Anthropic
+  - id: supabase_url
+    type: STRING
+    description: URL do Supabase
+  - id: supabase_key
+    type: STRING
+    description: Service role key do Supabase
+  - id: evolution_url
+    type: STRING
+    description: URL da Evolution API
+  - id: evolution_api_key
+    type: STRING
+    description: API key da Evolution API
 
 tasks:
+  # 1. Agente SDR conversa com o lead
   - id: sdr_agent
     type: io.kestra.plugin.ai.agent.AIAgent
     systemMessage: |
@@ -105,3 +127,65 @@ tasks:
     configuration:
       temperature: 0.6
       maxToken: 1024
+
+  # 2. Buscar instancia WhatsApp conectada do tenant
+  - id: fetch_instance
+    type: io.kestra.plugin.core.http.Request
+    uri: "{{ inputs.supabase_url }}/rest/v1/whatsapp_instances?tenant_id=eq.{{ inputs.tenant_id }}&status=eq.connected&limit=1"
+    method: GET
+    headers:
+      apikey: "{{ inputs.supabase_key }}"
+      Authorization: "Bearer {{ inputs.supabase_key }}"
+      Accept: application/json
+
+  # 3. Enviar mensagem WhatsApp via Evolution API
+  - id: send_whatsapp
+    type: io.kestra.plugin.core.http.Request
+    uri: "{{ inputs.evolution_url }}/message/sendText/{{ outputs.fetch_instance.body | jq('.[0].instance_name') | first }}"
+    method: POST
+    headers:
+      Content-Type: application/json
+      apikey: "{{ inputs.evolution_api_key }}"
+    body: |
+      {
+        "number": "{{ inputs.lead_phone }}",
+        "text": {{ outputs.sdr_agent.textOutput | jq('.message') | first | toJson }}
+      }
+
+  # 4. Determinar novo estagio e mover lead no pipeline
+  - id: move_pipeline
+    type: io.kestra.plugin.core.http.Request
+    uri: "{{ inputs.supabase_url }}/rest/v1/rpc/sdr_move_lead_stage"
+    method: POST
+    headers:
+      apikey: "{{ inputs.supabase_key }}"
+      Authorization: "Bearer {{ inputs.supabase_key }}"
+      Content-Type: application/json
+    body: |
+      {
+        "p_lead_id": "{{ inputs.lead_id }}",
+        "p_tenant_id": "{{ inputs.tenant_id }}",
+        "p_action": {{ outputs.sdr_agent.textOutput | jq('.action') | first | toJson }}
+      }
+
+  # 5. Registrar no historico do lead
+  - id: record_stage_history
+    type: io.kestra.plugin.core.http.Request
+    uri: "{{ inputs.supabase_url }}/rest/v1/lead_history"
+    method: POST
+    headers:
+      apikey: "{{ inputs.supabase_key }}"
+      Authorization: "Bearer {{ inputs.supabase_key }}"
+      Content-Type: application/json
+      Prefer: return=minimal
+    body: |
+      {
+        "lead_id": "{{ inputs.lead_id }}",
+        "action": "message_sent",
+        "metadata": {
+          "source": "sdr_agent",
+          "is_automated": true,
+          "agent_action": {{ outputs.sdr_agent.textOutput | jq('.action') | first | toJson }},
+          "qualification_status": {{ outputs.sdr_agent.textOutput | jq('.qualification_status') | first | toJson }}
+        }
+      }

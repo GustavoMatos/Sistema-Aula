@@ -1,7 +1,6 @@
 import { supabase } from '../config/supabase.js'
 import { config } from '../config/index.js'
 import { logger } from '../utils/logger.js'
-import { leadHistoryService } from './lead-history.service.js'
 import { sendMeetingInviteEmail } from './email.service.js'
 
 const KESTRA_NAMESPACE = 'leadtracker.ai'
@@ -83,24 +82,25 @@ class SdrService {
 
     logger.info('SDR session started', { leadId, sessionId })
 
-    await this.moveLeadToStage(leadId, tenantId, STAGE_NAMES.PRIMEIRO_CONTATO)
-
     const { data: lead } = await supabase
       .from('leads')
-      .select('name')
+      .select('name, phone')
       .eq('id', leadId)
       .single()
 
-    const greeting = await this.callAgent(
+    const agentResponse = await this.triggerKestraFlow(
       sessionId,
       'Ola, gostaria de saber mais sobre investimentos',
+      leadId,
       lead?.name || 'Cliente',
+      lead?.phone || '',
       '{}',
-      STAGE_NAMES.PRIMEIRO_CONTATO
+      STAGE_NAMES.PRIMEIRO_CONTATO,
+      tenantId
     )
 
-    if (greeting) {
-      await this.sendWhatsAppMessage(leadId, tenantId, greeting.message)
+    if (agentResponse) {
+      await this.handleAgentResponse(leadId, tenantId, null, agentResponse)
     }
   }
 
@@ -125,52 +125,59 @@ class SdrService {
 
     const { data: lead } = await supabase
       .from('leads')
-      .select('name, stage_id, kanban_stages(name)')
+      .select('name, phone, stage_id, kanban_stages(name)')
       .eq('id', leadId)
       .single()
 
     const currentStage = (lead as any)?.kanban_stages?.name || STAGE_NAMES.PRIMEIRO_CONTATO
 
-    const response = await this.callAgent(
+    const agentResponse = await this.triggerKestraFlow(
       sdrSession.kestra_session_id || `sdr-${leadId}`,
       messageContent,
+      leadId,
       lead?.name || 'Cliente',
+      lead?.phone || '',
       JSON.stringify(sdrSession.collected_data),
-      currentStage
+      currentStage,
+      tenantId
     )
 
-    if (!response) return
+    if (!agentResponse) return
 
-    if (response.collected_data && Object.keys(response.collected_data).length > 0) {
-      const merged = { ...sdrSession.collected_data, ...response.collected_data }
+    await this.handleAgentResponse(leadId, tenantId, sdrSession, agentResponse)
+  }
+
+  private async handleAgentResponse(
+    leadId: string,
+    tenantId: string,
+    session: SdrSession | null,
+    response: SdrAgentResponse
+  ): Promise<void> {
+    if (session && response.collected_data && Object.keys(response.collected_data).length > 0) {
+      const merged = { ...session.collected_data, ...response.collected_data }
       await supabase
         .from('sdr_sessions')
         .update({ collected_data: merged, updated_at: new Date().toISOString() })
-        .eq('id', sdrSession.id)
+        .eq('id', session.id)
     }
 
-    switch (response.action) {
-      case 'move_to_qualification':
-        await this.moveLeadToStage(leadId, tenantId, STAGE_NAMES.QUALIFICACAO)
-        break
+    if (response.action === 'qualify' && session) {
+      await this.handleQualification(leadId, tenantId, session, response)
+    } else if (response.action === 'disqualify' && session) {
+      await supabase
+        .from('sdr_sessions')
+        .update({ status: 'disqualified', updated_at: new Date().toISOString() })
+        .eq('id', session.id)
 
-      case 'qualify':
-        await this.qualifyLead(leadId, tenantId, sdrSession, response)
-        break
-
-      case 'disqualify':
-        await this.disqualifyLead(leadId, tenantId, sdrSession)
-        break
+      logger.info('Lead disqualified by SDR', { leadId })
     }
-
-    await this.sendWhatsAppMessage(leadId, tenantId, response.message)
   }
 
-  private async qualifyLead(
+  private async handleQualification(
     leadId: string,
-    tenantId: string,
+    _tenantId: string,
     session: SdrSession,
-    response: SdrAgentResponse
+    _response: SdrAgentResponse
   ): Promise<void> {
     const meetingDate = new Date()
     meetingDate.setDate(meetingDate.getDate() + 1)
@@ -189,8 +196,6 @@ class SdrService {
         updated_at: new Date().toISOString(),
       })
       .eq('id', session.id)
-
-    await this.moveLeadToStage(leadId, tenantId, STAGE_NAMES.REUNIAO_AGENDADA)
 
     const { data: lead } = await supabase
       .from('leads')
@@ -212,138 +217,18 @@ class SdrService {
       })
     }
 
-    await leadHistoryService.record({
-      lead_id: leadId,
-      action: 'stage_change',
-      metadata: {
-        reason: 'sdr_qualified',
-        meeting_date: meetingDate.toISOString(),
-        collected_data: response.collected_data,
-      },
-    })
-
     logger.info('Lead qualified by SDR', { leadId, meetingDate: meetingDate.toISOString() })
   }
 
-  private async disqualifyLead(leadId: string, tenantId: string, session: SdrSession): Promise<void> {
-    await supabase
-      .from('sdr_sessions')
-      .update({ status: 'disqualified', updated_at: new Date().toISOString() })
-      .eq('id', session.id)
-
-    await this.moveLeadToStage(leadId, tenantId, STAGE_NAMES.DESCARTADO)
-
-    await leadHistoryService.record({
-      lead_id: leadId,
-      action: 'stage_change',
-      metadata: { reason: 'sdr_disqualified', collected_data: session.collected_data },
-    })
-
-    logger.info('Lead disqualified by SDR', { leadId })
-  }
-
-  private async moveLeadToStage(leadId: string, tenantId: string, stageName: string): Promise<void> {
-    const { data: lead } = await supabase
-      .from('leads')
-      .select('stage_id')
-      .eq('id', leadId)
-      .single()
-
-    const { data: stage } = await supabase
-      .from('kanban_stages')
-      .select('id')
-      .eq('tenant_id', tenantId)
-      .eq('name', stageName)
-      .single()
-
-    if (!stage) {
-      logger.error('Stage not found', { stageName, tenantId })
-      return
-    }
-
-    await supabase
-      .from('leads')
-      .update({ stage_id: stage.id, updated_at: new Date().toISOString() })
-      .eq('id', leadId)
-
-    if (lead?.stage_id !== stage.id) {
-      await leadHistoryService.record({
-        lead_id: leadId,
-        action: 'stage_change',
-        metadata: { from_stage_id: lead?.stage_id, to_stage_id: stage.id, source: 'sdr_agent' },
-      })
-    }
-  }
-
-  private async sendWhatsAppMessage(leadId: string, tenantId: string, content: string): Promise<void> {
-    const { data: lead } = await supabase
-      .from('leads')
-      .select('phone')
-      .eq('id', leadId)
-      .single()
-
-    if (!lead?.phone) return
-
-    const { data: instance } = await supabase
-      .from('whatsapp_instances')
-      .select('instance_name, api_key')
-      .eq('tenant_id', tenantId)
-      .eq('status', 'connected')
-      .limit(1)
-      .single()
-
-    if (!instance) {
-      logger.warn('No connected WhatsApp instance for tenant', { tenantId })
-      return
-    }
-
-    try {
-      const evolutionUrl = config.evolution.url.replace(/\/$/, '')
-      const response = await fetch(`${evolutionUrl}/message/sendText/${instance.instance_name}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': instance.api_key || config.evolution.apiKey,
-        },
-        body: JSON.stringify({
-          number: lead.phone,
-          text: content,
-        }),
-      })
-
-      const result = await response.json() as { key?: { id?: string } }
-
-      await supabase.from('messages').insert({
-        lead_id: leadId,
-        direction: 'outbound',
-        content_type: 'text',
-        content,
-        status: 'sent',
-        whatsapp_message_id: result?.key?.id || null,
-        sent_at: new Date().toISOString(),
-      })
-
-      await supabase
-        .from('leads')
-        .update({ last_contact_at: new Date().toISOString() })
-        .eq('id', leadId)
-
-      await leadHistoryService.record({
-        lead_id: leadId,
-        action: 'message_sent',
-        metadata: { content_type: 'text', is_automated: true, source: 'sdr_agent' },
-      })
-    } catch (error) {
-      logger.error('SDR failed to send WhatsApp message', { error, leadId })
-    }
-  }
-
-  private async callAgent(
+  private async triggerKestraFlow(
     sessionId: string,
     message: string,
+    leadId: string,
     leadName: string,
+    leadPhone: string,
     leadContext: string,
-    currentStage: string
+    currentStage: string,
+    tenantId: string
   ): Promise<SdrAgentResponse | null> {
     try {
       const baseUrl = this.getBaseUrl()
@@ -352,10 +237,17 @@ class SdrService {
       const formData = new FormData()
       formData.append('lead_message', message)
       formData.append('session_id', sessionId)
+      formData.append('lead_id', leadId)
       formData.append('lead_name', leadName)
+      formData.append('lead_phone', leadPhone)
       formData.append('lead_context', leadContext)
       formData.append('current_stage', currentStage)
+      formData.append('tenant_id', tenantId)
       formData.append('api_key', config.kestra.aiApiKey)
+      formData.append('supabase_url', config.supabase.url)
+      formData.append('supabase_key', config.supabase.serviceKey)
+      formData.append('evolution_url', config.evolution.url)
+      formData.append('evolution_api_key', config.evolution.apiKey)
 
       const headers: HeadersInit = {}
       const auth = this.getAuthHeader()
