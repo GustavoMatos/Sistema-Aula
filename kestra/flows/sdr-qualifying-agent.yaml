@@ -140,7 +140,25 @@ tasks:
       Authorization: "Bearer {{ inputs.supabase_key }}"
       Accept: application/json
 
-  # 3. Enviar mensagem WhatsApp via Evolution API
+  # 3. Simular digitacao antes de enviar
+  - id: send_typing
+    type: io.kestra.plugin.core.http.Request
+    uri: "{{ inputs.evolution_url }}/chat/sendPresence/{{ outputs.fetch_instance.body | jq('.[0].instance_name') | first }}"
+    method: POST
+    headers:
+      Content-Type: application/json
+      apikey: "{{ inputs.evolution_api_key }}"
+    body: |
+      {
+        "number": "{{ inputs.lead_phone }}@s.whatsapp.net",
+        "presence": "composing"
+      }
+
+  - id: typing_delay
+    type: io.kestra.plugin.core.flow.Pause
+    delay: PT4S
+
+  # 4. Enviar mensagem WhatsApp via Evolution API
   - id: send_whatsapp
     type: io.kestra.plugin.core.http.Request
     uri: "{{ inputs.evolution_url }}/message/sendText/{{ outputs.fetch_instance.body | jq('.[0].instance_name') | first }}"
@@ -154,7 +172,7 @@ tasks:
         "text": {{ outputs.sdr_agent.textOutput | replace({"```json": "", "```": ""}) | trim | jq('.message') | first | toJson }}
       }
 
-  # 4. Determinar novo estagio e mover lead no pipeline
+  # 5. Determinar novo estagio e mover lead no pipeline
   - id: move_pipeline
     type: io.kestra.plugin.core.http.Request
     uri: "{{ inputs.supabase_url }}/rest/v1/rpc/sdr_move_lead_stage"
@@ -170,7 +188,7 @@ tasks:
         "p_action": {{ outputs.sdr_agent.textOutput | replace({"```json": "", "```": ""}) | trim | jq('.action') | first | toJson }}
       }
 
-  # 5. Registrar no historico do lead
+  # 6. Registrar no historico do lead
   - id: record_stage_history
     type: io.kestra.plugin.core.http.Request
     uri: "{{ inputs.supabase_url }}/rest/v1/lead_history"

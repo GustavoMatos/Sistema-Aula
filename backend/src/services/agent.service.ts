@@ -1,3 +1,4 @@
+import { supabase } from '../config/supabase.js'
 import { config } from '../config/index.js'
 import { BadRequestError } from '../utils/errors.js'
 import { logger } from '../utils/logger.js'
@@ -36,9 +37,119 @@ class AgentService {
     return config.kestra.url.replace(/\/$/, '')
   }
 
-  /**
-   * Send a message to the AI agent via Kestra
-   */
+  private async gatherTenantContext(tenantId: string): Promise<string> {
+    try {
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const startOfWeek = new Date(now)
+      startOfWeek.setDate(now.getDate() - now.getDay())
+      startOfWeek.setHours(0, 0, 0, 0)
+
+      const [
+        leadsResult,
+        leadsThisMonthResult,
+        leadsByStageResult,
+        messagesThisWeekResult,
+        sdrSessionsResult,
+        recentLeadsResult,
+        recentActivityResult,
+      ] = await Promise.all([
+        supabase
+          .from('leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', tenantId),
+
+        supabase
+          .from('leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', tenantId)
+          .gte('created_at', startOfMonth.toISOString()),
+
+        supabase
+          .from('leads')
+          .select('stage_id, kanban_stages(name)')
+          .eq('tenant_id', tenantId),
+
+        supabase
+          .from('messages')
+          .select('direction, leads!inner(tenant_id)', { count: 'exact' })
+          .eq('leads.tenant_id', tenantId)
+          .gte('created_at', startOfWeek.toISOString()),
+
+        supabase
+          .from('sdr_sessions')
+          .select('status')
+          .eq('tenant_id', tenantId),
+
+        supabase
+          .from('leads')
+          .select('name, phone, source, created_at, kanban_stages(name)')
+          .eq('tenant_id', tenantId)
+          .order('created_at', { ascending: false })
+          .limit(10),
+
+        supabase
+          .from('lead_history')
+          .select('action, metadata, created_at, leads!inner(name, tenant_id)')
+          .eq('leads.tenant_id', tenantId)
+          .order('created_at', { ascending: false })
+          .limit(10),
+      ])
+
+      const stageCount: Record<string, number> = {}
+      if (leadsByStageResult.data) {
+        for (const lead of leadsByStageResult.data) {
+          const stage = (lead.kanban_stages as unknown as { name: string } | null)?.name || 'Sem estágio'
+          stageCount[stage] = (stageCount[stage] || 0) + 1
+        }
+      }
+
+      const sdrStats = { active: 0, qualified: 0, disqualified: 0, completed: 0 }
+      if (sdrSessionsResult.data) {
+        for (const s of sdrSessionsResult.data) {
+          if (s.status in sdrStats) sdrStats[s.status as keyof typeof sdrStats]++
+        }
+      }
+
+      const msgThisWeek = messagesThisWeekResult.data || []
+      const inbound = msgThisWeek.filter((m: any) => m.direction === 'inbound').length
+      const outbound = msgThisWeek.filter((m: any) => m.direction === 'outbound').length
+
+      const recentLeads = (recentLeadsResult.data || []).map((l: any) => ({
+        nome: l.name,
+        telefone: l.phone,
+        origem: l.source,
+        estagio: l.kanban_stages?.name || 'Sem estágio',
+        criado_em: l.created_at,
+      }))
+
+      const recentActivity = (recentActivityResult.data || []).map((h: any) => ({
+        acao: h.action,
+        lead: (h.leads as any)?.name || 'Desconhecido',
+        data: h.created_at,
+        detalhes: (h.metadata as any)?.preview || '',
+      }))
+
+      const context = {
+        data_atual: now.toISOString().split('T')[0],
+        resumo: {
+          total_leads: leadsResult.count || 0,
+          leads_este_mes: leadsThisMonthResult.count || 0,
+          msgs_esta_semana: { recebidas: inbound, enviadas: outbound },
+        },
+        pipeline: stageCount,
+        sdr_agente: sdrStats,
+        ultimos_leads: recentLeads,
+        atividade_recente: recentActivity,
+      }
+
+      return JSON.stringify(context, null, 2)
+    } catch (error) {
+      logger.error('Failed to gather tenant context', { error, tenantId })
+      return '{}'
+    }
+  }
+
   async chat(
     userMessage: string,
     sessionId: string,
@@ -47,10 +158,11 @@ class AgentService {
   ): Promise<AgentResponse> {
     const baseUrl = this.getBaseUrl()
 
-    // Trigger the Kestra flow execution via multipart form
     const executeUrl = `${baseUrl}/api/v1/executions/${KESTRA_NAMESPACE}/${KESTRA_FLOW_ID}`
 
     logger.info('Triggering Kestra agent flow', { sessionId, tenantId })
+
+    const dataContext = await this.gatherTenantContext(tenantId)
 
     const formData = new FormData()
     formData.append('user_message', userMessage)
@@ -58,6 +170,7 @@ class AgentService {
     formData.append('tenant_id', tenantId)
     formData.append('user_id', userId)
     formData.append('api_key', config.kestra.aiApiKey)
+    formData.append('data_context', dataContext)
 
     const headers: HeadersInit = {}
     const auth = this.getAuthHeader()
