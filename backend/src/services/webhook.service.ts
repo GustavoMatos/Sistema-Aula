@@ -51,6 +51,48 @@ export interface MessageData {
 }
 
 class WebhookService {
+  private pendingMessages: Map<string, { leadId: string; tenantId: string; messages: string[]; timer: ReturnType<typeof setTimeout> }> = new Map()
+  private readonly DEBOUNCE_MS = 5000
+
+  private debounceSdrCall(leadId: string, tenantId: string, content: string, isNew: boolean): void {
+    const key = leadId
+
+    if (isNew) {
+      sdrService.startSession(leadId, tenantId).catch(err =>
+        console.error('[SDR] Failed to start session:', err)
+      )
+      return
+    }
+
+    const existing = this.pendingMessages.get(key)
+    if (existing) {
+      clearTimeout(existing.timer)
+      existing.messages.push(content)
+      existing.timer = setTimeout(() => {
+        const batch = this.pendingMessages.get(key)
+        if (batch) {
+          this.pendingMessages.delete(key)
+          const combined = batch.messages.join('\n')
+          sdrService.processIncomingMessage(batch.leadId, batch.tenantId, combined).catch(err =>
+            console.error('[SDR] Failed to process message:', err)
+          )
+        }
+      }, this.DEBOUNCE_MS)
+    } else {
+      const timer = setTimeout(() => {
+        const batch = this.pendingMessages.get(key)
+        if (batch) {
+          this.pendingMessages.delete(key)
+          const combined = batch.messages.join('\n')
+          sdrService.processIncomingMessage(batch.leadId, batch.tenantId, combined).catch(err =>
+            console.error('[SDR] Failed to process message:', err)
+          )
+        }
+      }, this.DEBOUNCE_MS)
+      this.pendingMessages.set(key, { leadId, tenantId, messages: [content], timer })
+    }
+  }
+
   // Process incoming message
   async processIncomingMessage(instanceName: string, data: MessageData): Promise<void> {
     try {
@@ -95,14 +137,12 @@ class WebhookService {
         },
       })
 
-      // SDR Agent: start session for new leads, forward messages for existing
-      if (isNew) {
+      // SDR Agent: debounce messages to batch rapid sequential messages
+      if (content) {
+        this.debounceSdrCall(lead.id, lead.tenant_id, content, isNew)
+      } else if (isNew) {
         sdrService.startSession(lead.id, lead.tenant_id).catch(err =>
           console.error('[SDR] Failed to start session:', err)
-        )
-      } else if (content) {
-        sdrService.processIncomingMessage(lead.id, lead.tenant_id, content).catch(err =>
-          console.error('[SDR] Failed to process message:', err)
         )
       }
     } catch (error) {
