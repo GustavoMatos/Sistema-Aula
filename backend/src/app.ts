@@ -18,6 +18,7 @@ app.use(helmet())
 const allowedOrigins = [
   config.frontendUrl,
   'https://gangus.netlify.app',
+  'https://leadtracker.azzoasset.com.br',
   'http://localhost:5173',
   'http://localhost:5174',
 ].filter(Boolean)
