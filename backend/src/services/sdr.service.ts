@@ -290,6 +290,8 @@ class SdrService {
       formData.append('supabase_key', config.supabase.serviceKey)
       formData.append('evolution_url', config.evolution.url)
       formData.append('evolution_api_key', config.evolution.apiKey)
+      const delaySec = Math.floor(Math.random() * 4) + 2
+      formData.append('typing_delay_duration', `PT${delaySec}S`)
 
       const headers: HeadersInit = {}
       const auth = this.getAuthHeader()

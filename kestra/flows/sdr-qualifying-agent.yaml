@@ -46,6 +46,10 @@ inputs:
   - id: evolution_api_key
     type: STRING
     description: API key da Evolution API
+  - id: typing_delay_duration
+    type: STRING
+    description: Duracao do delay de digitacao (ex PT3S)
+    defaults: "PT3S"
 
 tasks:
   # 1. Agente SDR conversa com o lead
@@ -151,12 +155,13 @@ tasks:
     body: |
       {
         "number": "{{ inputs.lead_phone }}@s.whatsapp.net",
-        "presence": "composing"
+        "presence": "composing",
+        "delay": 5000
       }
 
   - id: typing_delay
     type: io.kestra.plugin.core.flow.Pause
-    delay: PT4S
+    delay: "{{ inputs.typing_delay_duration }}"
 
   # 4. Enviar mensagem WhatsApp via Evolution API
   - id: send_whatsapp
