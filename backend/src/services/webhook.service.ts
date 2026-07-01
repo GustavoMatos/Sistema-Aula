@@ -102,7 +102,8 @@ class WebhookService {
       if (key.fromMe) return
 
       // Extract phone number from remoteJid (format: 5511999998888@s.whatsapp.net)
-      const phone = key.remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '')
+      const rawPhone = key.remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '')
+      const phone = this.normalizeBrazilianPhone(rawPhone)
 
       // Get message content
       const content = this.extractMessageContent(message)
@@ -201,6 +202,17 @@ class WebhookService {
     } catch (error) {
       console.error('Error processing connection status:', error)
     }
+  }
+
+  private normalizeBrazilianPhone(phone: string): string {
+    if (phone.startsWith('55') && phone.length === 12) {
+      const ddd = phone.substring(2, 4)
+      const number = phone.substring(4)
+      if (number.length === 8 && /^[6-9]/.test(number)) {
+        return `55${ddd}9${number}`
+      }
+    }
+    return phone
   }
 
   private extractMessageContent(message?: MessageData['message']): string | null {
