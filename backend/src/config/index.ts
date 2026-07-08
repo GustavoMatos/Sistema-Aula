@@ -33,6 +33,12 @@ const envSchema = z.object({
 
   // SDR Agent
   DEFAULT_ADVISOR_EMAIL: optionalString,
+
+  // Meta WhatsApp Cloud API
+  META_WHATSAPP_TOKEN: optionalString,
+  META_PHONE_NUMBER_ID: optionalString,
+  META_WHATSAPP_VERIFY_TOKEN: z.string().default('leadtracker_webhook_verify_2024'),
+  META_WABA_ID: optionalString,
 })
 
 // Parse and validate
@@ -98,5 +104,11 @@ export const config = {
   webhookBaseUrl: env.WEBHOOK_BASE_URL || '',
   sdr: {
     defaultAdvisorEmail: env.DEFAULT_ADVISOR_EMAIL || '',
+  },
+  meta: {
+    accessToken: env.META_WHATSAPP_TOKEN || '',
+    phoneNumberId: env.META_PHONE_NUMBER_ID || '',
+    verifyToken: env.META_WHATSAPP_VERIFY_TOKEN,
+    wabaId: env.META_WABA_ID || '',
   },
 }
